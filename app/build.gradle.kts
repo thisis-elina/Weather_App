@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.cc221001.weather_app"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.cc221001.weather_app"
