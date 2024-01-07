@@ -1,7 +1,9 @@
 package com.cc221001.weather_app
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -20,7 +22,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
 import com.cc221001.weather_app.ui.theme.Weather_AppTheme
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+import com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.OnTokenCanceledListener
@@ -50,22 +58,28 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier
                             .background(Color(0xFF010528))
                             .fillMaxSize()
-                    ) {
-                    }
+                    )
+                    // Initiating the request to launch the permission dialog for accessing fine location.
+                    requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
-                // Initiating the request to launch the permission dialog for accessing coarse location.
-                requestPermission.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
             }
         }
     }
+
+
     private fun checkLocation() {
         val client = LocationServices.getFusedLocationProviderClient(this)
 
+        val request = LocationRequest.create()
+            .setInterval(10_000)
+            .setFastestInterval(5_000)
+            .setPriority(PRIORITY_HIGH_ACCURACY)
+            .setSmallestDisplacement(170f)
 
-        client.lastLocation.addOnSuccessListener {
-            println("Did $it!")
-        }.addOnFailureListener {
-            println("Failed $it!")
-        }
+        client.requestLocationUpdates(request, object: LocationCallback() {
+            override fun onLocationResult(p0: LocationResult) {
+                println("Result: $p0")
+            }
+        }, Looper.getMainLooper())
     }
 }
