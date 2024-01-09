@@ -7,6 +7,7 @@ import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.ViewModelProvider
 import com.cc221001.weather_app.ui.theme.Weather_AppTheme
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -35,12 +37,13 @@ import com.google.android.gms.tasks.OnTokenCanceledListener
 
 class MainActivity : ComponentActivity() {
 
+    private val viewModel: MainViewModel by viewModels()
     // Creating a property to hold the ActivityResultLauncher for requesting a permission.
     private val requestPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
             // This code block is executed when the permission request is completed.
             // If the permission is granted, call the checkLocation() function. it = isPermissionGranted
-            if (it) checkLocation()
+            if (it) viewModel.onPermissionGranted()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,27 +62,17 @@ class MainActivity : ComponentActivity() {
                             .background(Color(0xFF010528))
                             .fillMaxSize()
                     )
+                    {
+                        Text("Progress")
+                    }
+                }
                     // Initiating the request to launch the permission dialog for accessing fine location.
                     requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    ViewModelProvider(this).get(MainViewModel::class.java)
                 }
             }
         }
     }
 
 
-    private fun checkLocation() {
-        val client = LocationServices.getFusedLocationProviderClient(this)
 
-        val request = LocationRequest.create()
-            .setInterval(10_000)
-            .setFastestInterval(5_000)
-            .setPriority(PRIORITY_HIGH_ACCURACY)
-            .setSmallestDisplacement(170f)
-
-        client.requestLocationUpdates(request, object: LocationCallback() {
-            override fun onLocationResult(p0: LocationResult) {
-                println("Result: $p0")
-            }
-        }, Looper.getMainLooper())
-    }
-}
