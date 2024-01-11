@@ -36,7 +36,10 @@ import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.OnTokenCanceledListener
 
 class MainActivity : ComponentActivity() {
-
+    // This line declares and initializes a MainViewModel using the viewModels() delegate.
+    // The 'by viewModels()' part indicates that the ViewModel instance will be scoped to the lifecycle of the corresponding Activity or Fragment.
+    // Scoping to the lifecycle means that MainViewModel instance is created in association with the lifecycle of the activity.
+    //  Useful because it means ViewModel will be automatically cleared when activity is destroyed => no memory leaks, cuz n VM beyond lifecycle
     private val viewModel: MainViewModel by viewModels()
     // Creating a property to hold the ActivityResultLauncher for requesting a permission.
     private val requestPermission =
