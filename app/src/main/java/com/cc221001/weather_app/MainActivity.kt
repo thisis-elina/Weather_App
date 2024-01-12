@@ -69,12 +69,11 @@ class MainActivity : ComponentActivity() {
                         Text("Progress")
                     }
                 }
-                    // Initiating the request to launch the permission dialog for accessing fine location.
-                    requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                    ViewModelProvider(this).get(MainViewModel::class.java)
-                }
             }
         }
+        // Initiating the request to launch the permission dialog for accessing fine location.
+        requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
     }
 
 

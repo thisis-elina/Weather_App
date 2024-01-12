@@ -2,14 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-
-        <!--
-        This line requests permission to find out where the user is approximately.
-        It's helpful when the app wants to know a general location using methods
-        like network triangulation.
-        -->
         <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+        <uses-permission android:name="android.permission.INTERNET" />
 
         <application
             android:allowBackup="true"
