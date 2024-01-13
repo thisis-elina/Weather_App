@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
     // Scoping to the lifecycle means that MainViewModel instance is created in association with the lifecycle of the activity.
     //  Useful because it means ViewModel will be automatically cleared when activity is destroyed => no memory leaks, cuz n VM beyond lifecycle
     private val viewModel: MainViewModel by viewModels()
+
     // Creating a property to hold the ActivityResultLauncher for requesting a permission.
     private val requestPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -62,52 +63,45 @@ class MainActivity : ComponentActivity() {
             Weather_AppTheme {
                 val weather by viewModel.weather.collectAsState(null)
                 Column(Modifier.fillMaxSize()) {
-                    Box {
-                    Image(
-                        painter = painterResource(id = R.drawable.background_sunny),
-                        contentDescription = "Background",
-                        modifier = Modifier.fillMaxWidth(),
-                        contentScale = ContentScale.FillWidth
-                    )
-                        Column(
-                            Modifier
-                                .padding(top = 48.dp)
-                                .align(Alignment.TopCenter),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = weather?.main?.temp.toString(), fontSize = 48.sp, color = Color.White)
-                            Text(text = weather?.weather?.first()?.main.toString(), fontSize = 28.sp, color = Color.White)
-                            Text(text = weather?.name.toString(), fontSize = 18.sp, color = Color.White)
-                        }
+                    weather?.let {
+                        WeatherSummary(weather = it)
                     }
                     Box(
                         modifier = Modifier
                             .background(Color(0xFF010528))
                             .fillMaxSize()
                     )
-                    {
-                        val weather by viewModel.weather.collectAsState(null)
-                        WeatherDemo(weather = weather)
-                    }
+                    // Initiating the request to launch the permission dialog for accessing fine location.
+                    requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
+            }
+        }
+    }
 
-        // Initiating the request to launch the permission dialog for accessing fine location.
-        requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-
+    @Composable
+    fun WeatherSummary(weather: WeatherResponse) {
+        Box {
+            Image(
+                painter = painterResource(id = R.drawable.background_sunny),
+                contentDescription = "Background",
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.FillWidth
+            )
+            Column(
+                Modifier
+                    .padding(top = 48.dp)
+                    .align(Alignment.TopCenter),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = weather?.main?.temp.toString(), fontSize = 48.sp, color = Color.White)
+                Text(
+                    text = weather?.weather?.first()?.main.toString(),
+                    fontSize = 28.sp,
+                    color = Color.White
+                )
+                Text(text = weather?.name.toString(), fontSize = 18.sp, color = Color.White)
             }
         }
     }
 }
-
-            @Composable
-            fun WeatherDemo(weather: WeatherResponse?) {
-                if (weather == null) {
-                    Text("Loading")
-                }
-                else {
-                    Text(text = weather.name)
-                    println("City: ${weather.name}")
-                }
-            }
-
 
