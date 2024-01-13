@@ -18,6 +18,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -25,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
+import com.cc221001.weather_app.service.dto.WeatherResponse
 import com.cc221001.weather_app.ui.theme.Weather_AppTheme
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -66,15 +69,28 @@ class MainActivity : ComponentActivity() {
                             .fillMaxSize()
                     )
                     {
-                        Text("Progress")
+                        val weather by viewModel.weather.collectAsState(null)
+                        WeatherDemo(weather = weather)
                     }
                 }
-            }
-        }
+
         // Initiating the request to launch the permission dialog for accessing fine location.
         requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
-    }
 
+            }
+        }
+    }
+}
+
+            @Composable
+            fun WeatherDemo(weather: WeatherResponse?) {
+                if (weather == null) {
+                    Text("Loading")
+                }
+                else {
+                    Text(text = weather.name)
+                    println("City: ${weather.name}")
+                }
+            }
 
 
