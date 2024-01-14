@@ -62,9 +62,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        println("Activity Created")
         setContent {
             Weather_AppTheme {
                 val weather by viewModel.weather.collectAsState(null)
+                println("${weather}")
                 Column(Modifier.fillMaxSize()) {
                     weather?.let {
                         WeatherSummary(weather = it)
@@ -83,6 +85,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun WeatherSummary(weather: WeatherResponse) {
+        println("where is image")
         Box {
             Image(
                 painter = painterResource(id = weather.background()),

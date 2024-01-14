@@ -2,6 +2,7 @@ package com.cc221001.weather_app.service
 
 import android.Manifest
 import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.app.Application
 import android.content.Context
 import android.location.Location
 import android.os.Looper
@@ -21,7 +22,8 @@ import javax.inject.Inject
 /**
  * Repository class responsible for fetching weather data based on the current device location.
  */
-class WeatherRepository @Inject constructor() {
+class WeatherRepository @Inject constructor(
+) {
     // OpenWeatherMap API service instance for making network requests
     private val service = OpenWeatherService()
 
@@ -70,12 +72,12 @@ class WeatherRepository @Inject constructor() {
      */
     @RequiresPermission(ACCESS_FINE_LOCATION)
     fun currentLocationWeather(context: Context): Flow<WeatherResponse?> {
-        return locationFlow(context).map{
+        val flow = locationFlow(context).map{
             // Fetch current weather data using the obtained location
             service.getCurrentWeather(it.latitude, it.longitude, BuildConfig.API_KEY)
                 .body()
         }
+        return flow
     }
-
 
 }
