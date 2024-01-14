@@ -16,11 +16,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
 /**
  * Repository class responsible for fetching weather data based on the current device location.
  */
-class WeatherRepository {
+class WeatherRepository @Inject constructor() {
     // OpenWeatherMap API service instance for making network requests
     private val service = OpenWeatherService()
 

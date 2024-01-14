@@ -8,8 +8,10 @@ import androidx.lifecycle.viewModelScope
 import com.cc221001.weather_app.service.OpenWeatherService
 import com.cc221001.weather_app.service.WeatherRepository
 import com.cc221001.weather_app.service.dto.WeatherResponse
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * ViewModel for the main application screen, responsible for managing weather-related data.
@@ -17,12 +19,14 @@ import kotlinx.coroutines.launch
  * @param application The application instance, used to access global application state.
  */
 @SuppressLint("MissingPermission")
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class MainViewModel @Inject constructor (
+    application: Application,
+    private val repository: WeatherRepository) : AndroidViewModel(application) {
     // Repository instance for fetching weather data
-    private val repo = WeatherRepository()
 
     // Flow representing the current weather data based on the device's location
-    val weather: Flow<WeatherResponse?> = repo.currentLocationWeather(getApplication() as Context)
+    val weather: Flow<WeatherResponse?> = repository.currentLocationWeather(getApplication() as Context)
 
     /**
      * Invoked when the necessary location permission is granted.
@@ -31,7 +35,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * @return Flow<WeatherResponse?> representing the current weather data.
      */
     fun onPermissionGranted(): Flow<WeatherResponse?> {
-        return repo.currentLocationWeather(getApplication() as Context)
+        return repository.currentLocationWeather(getApplication() as Context)
         }
     }
 
