@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -82,7 +83,7 @@ class MainActivity : ComponentActivity() {
     fun WeatherSummary(weather: WeatherResponse) {
         Box {
             Image(
-                painter = painterResource(id = R.drawable.background_sunny),
+                painter = painterResource(id = weather.background()),
                 contentDescription = "Background",
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = ContentScale.FillWidth
@@ -102,6 +103,17 @@ class MainActivity : ComponentActivity() {
                 Text(text = weather?.name.toString(), fontSize = 18.sp, color = Color.White)
             }
         }
+    }
+}
+
+
+@DrawableRes
+private fun WeatherResponse.background(): Int {
+    val conditions = weather.first().main
+    return when {
+        conditions.contains("cloud", ignoreCase = true) -> R.drawable.background_cloudy
+        conditions.contains("rain", ignoreCase = true) -> R.drawable.background_rainy
+        else -> R.drawable.background_sunny
     }
 }
 
