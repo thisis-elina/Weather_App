@@ -78,150 +78,127 @@ sealed class Screen(val route: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 // MainView is a Composable function that creates the main view of your app.
 @Composable
-fun MainView(mainViewModel: MainViewModel, weatherViewModel: WeatherViewModel) {
-    val state = mainViewModel.mainViewState.collectAsState()
+fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewModel) {
+    val state = citiesViewModel.citiesViewState.collectAsState()
     val weather by weatherViewModel.weather.collectAsState(null)
     val navController = rememberNavController()
-    var nextStep by remember { mutableStateOf(false) }
-    var loadingScreen by remember { mutableStateOf(true) }
-    var isConnected by remember { mutableStateOf(false) }
-    var context = LocalContext.current
 
-    //mainViewModel.getCities() // Fetch Cities
-    if (loadingScreen) {
-        android.os.Handler()
-            .postDelayed({ loadingScreen = false}, 3000)
+    Scaffold(
+        // Define the bottom navigation bar for the Scaffold.
+        //topBar = { MyTopAppBar(navController, state.value.selectedScreen) },
+        //bottomBar = { BottomNavigationBar(navController, state.value.selectedScreen) },
+        containerColor = Color.White,
+    ) {
         WeatherComposable(weather = weather)
-    }
-    else{
-        isConnected = isInternetAvailable(context = context)
-        if (!nextStep) {
-            WeatherComposable(weather = weather)
-            if(!isConnected) {
-                NoInternetPopUp(
-                    title = "Are you connected?" ,
-                    text = "It seems like you're currently not connected to the internet. Please make sure you have an internet connection available upon using this app!",
-                    onAcceptClick= { isConnected = isInternetAvailable(context = context)})
+        // NavHost manages composable destinations for navigation.
+        NavHost(
+            navController = navController,
+            modifier = Modifier.padding(it), // Apply padding from the Scaffold.
+            startDestination = Screen.Weather.route // Define the starting screen.
+        ) {
+            // Define the composable function for the 'Weather' route.
+            composable(Screen.Weather.route) {
+                    DisplayWeather(weatherViewModel)
+                }
             }
         }
-
-        else {
-            nextStep = false
-            Scaffold(
-                // Define the bottom navigation bar for the Scaffold.
-                //topBar = { MyTopAppBar(navController, state.value.selectedScreen) },
-                bottomBar = { BottomNavigationBar(navController, state.value.selectedScreen) },
-                containerColor = Color.White,
-            ) {
-                WeatherComposable(weather = weather)
-                // NavHost manages composable destinations for navigation.
-                NavHost(
-                    navController = navController,
-                    modifier = Modifier.padding(it), // Apply padding from the Scaffold.
-                    startDestination = Screen.Weather.route // Define the starting screen.
+    }
+    @Composable
+    fun NoInternetPopUp(title: String, text: String, onAcceptClick: () -> Unit) {
+        //val customFontFamily = FontFamily(Font(R.font.aldrich))
+        AlertDialog(containerColor = Color(0, 0, 0, 200),
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .border(
+                    2.dp, Color(255, 255, 255, 75),
+                    RoundedCornerShape(20.dp)
+                ),
+            onDismissRequest = {},
+            title = {
+                Text(
+                    text = title,
+                    color = Color.White,
+                    //fontFamily = customFontFamily
+                )
+            }, text = {
+                Text(
+                    text = text,
+                    color = Color.White,
+                    //fontFamily = customFontFamily
+                )
+            }, confirmButton = {
+                Surface(
+                    color = Color(106, 84, 141, 255), // Set the background color of the surface
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(50.dp)
+                        .clickable(onClick = onAcceptClick)
+                        .clip(RoundedCornerShape(10.dp))
                 ) {
-                    // Define the composable function for the 'Weather' route.
-                    composable(Screen.Weather.route) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "RETRY", color = Color.White,
+                            //fontFamily = customFontFamily
+                        )
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun NoInternetPopUp(title:String, text:String, onAcceptClick:()->Unit){
-    //val customFontFamily = FontFamily(Font(R.font.aldrich))
-    AlertDialog(containerColor = Color(0, 0, 0, 200),
-        modifier= Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .border(
-                2.dp, Color(255, 255, 255, 75),
-                RoundedCornerShape(20.dp)
-            ),
-        onDismissRequest = {},
-        title = {
-            Text(
-                text = title,
-                color = Color.White,
-                //fontFamily = customFontFamily
-            )
-        }, text = {
-            Text(
-                text = text,
-                color = Color.White,
-                //fontFamily = customFontFamily
-            )
-        }, confirmButton = {
-            Surface(
-                color = Color(106, 84, 141, 255), // Set the background color of the surface
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(50.dp)
-                    .clickable(onClick = onAcceptClick)
-                    .clip(RoundedCornerShape(10.dp))
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxWidth()) {
-                    Text(text = "RETRY", color=Color.White,
-                        //fontFamily = customFontFamily
-                )
-                }
-            }
-        }
-    )
-}
-
-fun isInternetAvailable(context: Context): Boolean {
-    var result = false
-    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    val networkCapabilities = connectivityManager.activeNetwork ?: return false
-    val actNw = connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
-    result = when {
-        actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
-        actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
-        actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
-        else -> false
-    }
-    return result
-}
-
-@Composable
-fun BottomNavigationBar(navController: NavHostController, selectedScreen: Screen) {
-    val iconSize = 24.dp // Adjust the size as needed
-    BottomNavigation(
-        elevation = 0.dp,
-        backgroundColor = Color(0, 0, 0, 125),
-    ) {
-        NavigationBarItem(
-            selected = (selectedScreen == Screen.Weather),
-            onClick = { navController.navigate(Screen.Weather.route) },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home Icon",
-                    tint = Color.White,
-                    modifier = Modifier.size(iconSize)
-                )
-            },
-            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                indicatorColor = Color(106, 84, 141, 255)
-            )
-        )
-
-        NavigationBarItem(
-            selected = (selectedScreen == Screen.Cities),
-            onClick = { navController.navigate(Screen.Cities.route) },
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.sunicon),
-                    contentDescription = "Weather Icon",
-                    tint = Color.White,
-                    modifier = Modifier.size(iconSize)
-                )
-            },
-            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
-                indicatorColor = Color(106, 84, 141, 255)
-            )
         )
     }
-}
+
+    fun isInternetAvailable(context: Context): Boolean {
+        var result = false
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities = connectivityManager.activeNetwork ?: return false
+        val actNw = connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+        result = when {
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> true
+            actNw.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> true
+            else -> false
+        }
+        return result
+    }
+
+    @Composable
+    fun BottomNavigationBar(navController: NavHostController, selectedScreen: Screen) {
+        val iconSize = 24.dp // Adjust the size as needed
+        BottomNavigation(
+            elevation = 0.dp,
+            backgroundColor = Color(0, 0, 0, 125),
+        ) {
+            NavigationBarItem(
+                selected = (selectedScreen == Screen.Weather),
+                onClick = { navController.navigate(Screen.Weather.route) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Home Icon",
+                        tint = Color.White,
+                        modifier = Modifier.size(iconSize)
+                    )
+                },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    indicatorColor = Color(106, 84, 141, 255)
+                )
+            )
+
+            NavigationBarItem(
+                selected = (selectedScreen == Screen.Cities),
+                onClick = { navController.navigate(Screen.Cities.route) },
+                icon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.sunicon),
+                        contentDescription = "Weather Icon",
+                        tint = Color.White,
+                        modifier = Modifier.size(iconSize)
+                    )
+                },
+                colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                    indicatorColor = Color(106, 84, 141, 255)
+                )
+            )
+        }
+    }
+

@@ -40,22 +40,20 @@ class MainActivity : ComponentActivity() {
 
     private val permissionHandler = PermissionHandler(this)
     private val requiredPermissions = arrayOf(
-        Manifest.permission.ACTIVITY_RECOGNITION,
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.FOREGROUND_SERVICE,
         Manifest.permission.POST_NOTIFICATIONS
     )
 
     private val requiredPermissionsLowerVersion = arrayOf(
-        Manifest.permission.ACTIVITY_RECOGNITION,
         Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.FOREGROUND_SERVICE
     )
 
     private val db = WeatherDatabaseHandler(this)
 
-    private val mainViewModel = MainViewModel(db)
     private val weatherViewModel: WeatherViewModel by viewModels()
+    private val citiesViewModel = CitiesViewModel(db)
 
     // Creating a property to hold the ActivityResultLauncher for requesting a permission.
     private val requestPermission =
@@ -68,6 +66,7 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+            permissionHandler.requestPermissions(requiredPermissions)
         setContent {
             requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             Weather_AppTheme {
@@ -75,7 +74,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainView(mainViewModel, weatherViewModel)
+                    MainView(weatherViewModel, citiesViewModel,)
                 }
             }
         }

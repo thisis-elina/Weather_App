@@ -16,13 +16,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.cc221001.weather_app.MainViewModel
+import com.cc221001.weather_app.CitiesViewModel
 import com.cc221001.weather_app.R
 import com.cc221001.weather_app.service.dto.CurrentWeather
 
 @Composable
 fun mainScreen(
-    mainViewModel: MainViewModel,
+    citiesViewModel: CitiesViewModel,
     navController: NavHostController
 ) {
 // Using a Column to layout elements vertically.

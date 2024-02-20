@@ -55,6 +55,7 @@ fun DisplayWeather(weatherViewModel: WeatherViewModel) {
                 .padding(20.dp),
             verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             if (weather == null) {
+                println("Weather: $weather")
                 WeatherFeedback()
             } else {
                 // Display weather data

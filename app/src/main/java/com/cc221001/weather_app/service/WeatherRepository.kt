@@ -25,14 +25,9 @@ import javax.inject.Inject
 /**
  * Repository class responsible for fetching weather data based on the current device location.
  */
-class SimpleForecast(
-    val dayName: String,
-    val condition: String,
-    val temperature: Double
-)
-
 class WeatherRepository @Inject constructor(
-    private val application: Application, private val service: OpenWeatherService
+    private val application: Application,
+    private val service: OpenWeatherService
 ) {
 
     @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -128,3 +123,8 @@ class WeatherRepository @Inject constructor(
     }
 
 }
+class SimpleForecast(
+    val dayName: String,
+    val condition: String,
+    val temperature: Double
+)
