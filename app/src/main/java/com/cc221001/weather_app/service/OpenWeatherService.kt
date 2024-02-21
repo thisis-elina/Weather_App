@@ -19,17 +19,23 @@ interface OpenWeatherService {
      * @param appid API key for authentication.
      * @return A [Response] containing the weather information in [CurrentWeather] format.
      */
-    @GET("weather?units=metric")
+    @GET("data/2.5/weather?units=metric")
     suspend fun getCurrentWeather(
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
         @Query("appid") appid: String,
     ) : Response<CurrentWeather>
 
-    @GET("forecast?units=metric")
+    @GET("data/2.5/forecast?units=metric")
     suspend fun getForecastWeather(
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
+        @Query("appid") appid: String,
+    ) : Response<ForecastWeather>
+
+    @GET("geo/1.0/direct?")
+    suspend fun getCityCoord(
+        @Query("q") q: String,
         @Query("appid") appid: String,
     ) : Response<ForecastWeather>
 }
