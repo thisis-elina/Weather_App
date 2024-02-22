@@ -12,5 +12,6 @@ data class FavoriteCityWeather(
     val temperature: Double,
     val weatherStatus: String,
     val lat: Double,
-    val lon: Double
+    val lon: Double,
+    var isStarred: Boolean = false
 )

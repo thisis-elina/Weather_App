@@ -87,39 +87,29 @@ class CitiesViewModel @Inject constructor(
             // Fetch favorite cities from the database
             val favoriteCities = databaseHandler.getFavoriteCities()
 
-            // Create a Flow of FavoriteCityWeather by fetching weather for each favorite city
-            val weatherInfoFlows = favoriteCities.map { city ->
-                // Map WeatherDatabaseHandler.City to CityDTO
-                val city = WeatherDatabaseHandler.City(
-                    name = city.name,
-                    lat = city.lat,
-                    long = city.long,
-                )
-                weatherRepository.getFavouritesCurrentWeather(city)
-                    .mapNotNull { weather ->
-                        weather?.let {
+            // Use a temporary list to collect the weather data for each city
+            val weatherInfoList = mutableListOf<FavoriteCityWeather>()
+
+            favoriteCities.forEach { city ->
+                weatherRepository.getFavouritesCurrentWeather(
+                    WeatherDatabaseHandler.City(city.name, city.lat, city.long, city.isStarred)
+                ).collect { weather ->
+                    weather?.let {
+                        weatherInfoList.add(
                             FavoriteCityWeather(
                                 cityName = city.name,
                                 temperature = it.main.temp,
                                 lat = city.lat,
                                 lon = city.long,
-                                weatherStatus = it.weather.first().main
+                                weatherStatus = it.weather.first().main,
+                                isStarred = city.isStarred
                             )
-                        }
+                        )
                     }
+                }
             }
 
-            // Flatten and merge the flows concurrently
-            val mergedFlow = weatherInfoFlows
-                .map { flow -> flow.flowOn(Dispatchers.Default) } // Ensure each flow runs on a separate dispatcher
-                .toList() // Convert the list of flows to a single flow
-                .asFlow() // Convert the list to a flow
-                .flatMapMerge { it } // Flatten and merge the flows
-
-            // Collect the results into a list
-            val weatherInfoList = mergedFlow.toList()
-
-            // Update the view state with the new list
+            // Now update the state with the collected list
             _citiesViewState.update { currentState ->
                 currentState.copy(favoriteCitiesWeather = weatherInfoList)
             }
@@ -142,7 +132,17 @@ class CitiesViewModel @Inject constructor(
             }
         }
     }
-
+    fun toggleCityStarredStatus(cityName: String, isStarred: Boolean) {
+        viewModelScope.launch {
+            val result = databaseHandler.updateCityStarredStatus(cityName, isStarred)
+            if (result > 0) {
+                // Optionally update any live data or state flow to refresh UI
+                updateFavoriteCitiesWeather()
+            } else {
+                // Handle error, if necessary
+            }
+        }
+    }
 }
 
 

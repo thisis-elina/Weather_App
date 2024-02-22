@@ -18,11 +18,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,9 +40,11 @@ import com.cc221001.weather_app.stateModel.FavoriteCityWeather
 
 @Composable
 fun DisplayCities(citiesViewState: CitiesViewState, citiesViewModel: CitiesViewModel) {
-    val favoriteCities by citiesViewModel.favoriteCities.collectAsState()
+    // Sort cities so that starred ones are at the top
+    val sortedCities = citiesViewState.favoriteCitiesWeather.sortedByDescending { it.isStarred }
+
     LazyColumn {
-        items(citiesViewState.favoriteCitiesWeather) { cityWeather ->
+        items(sortedCities) { cityWeather ->
             CityWeatherCard(cityWeather = cityWeather, citiesViewModel = citiesViewModel)
         }
     }
@@ -46,7 +54,7 @@ fun DisplayCities(citiesViewState: CitiesViewState, citiesViewModel: CitiesViewM
 @Composable
 fun CityWeatherCard(cityWeather: FavoriteCityWeather, citiesViewModel: CitiesViewModel) {
     val context = LocalContext.current
-
+    var isStarred by remember { mutableStateOf(cityWeather.isStarred) }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -67,6 +75,21 @@ fun CityWeatherCard(cityWeather: FavoriteCityWeather, citiesViewModel: CitiesVie
                 Text(text = cityWeather.cityName, color = Color.White)
                 Text(text = "${cityWeather.temperature}° | ${cityWeather.weatherStatus}", color = Color.White)
             }
+            Spacer(Modifier.weight(1f))
+            // Star Icon for favoriting
+            Icon(
+                imageVector = if (isStarred) Icons.Filled.Star else Icons.Outlined.Add,
+                contentDescription = "Star",
+                tint = Color.White,
+                modifier = Modifier
+                    .clickable {
+                        val newStatus = !isStarred
+                        citiesViewModel.toggleCityStarredStatus(cityWeather.cityName, newStatus)
+                        isStarred = newStatus // Update local UI state
+                        citiesViewModel.updateFavoriteCitiesWeather()
+                    }
+                    .size(24.dp)
+            )
 
             // Spacer to push content and icon apart
             Spacer(Modifier.weight(1f))
