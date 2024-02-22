@@ -42,7 +42,6 @@ class CitiesViewModel @Inject constructor(
 
     init {
         updateFavoriteCitiesWeather()
-        refreshFavoriteCities()
     }
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
@@ -64,7 +63,7 @@ class CitiesViewModel @Inject constructor(
         viewModelScope.launch {
             val insertResult = databaseHandler.insertCity(city.name, city.lat, city.long)
             if (insertResult > -1) { // Assuming successful insert returns a row ID greater than -1
-                refreshFavoriteCities() // Refresh the list of favorite cities
+                updateFavoriteCitiesWeather()
             } else {
                 // Handle the error case if needed
             }
@@ -125,7 +124,7 @@ class CitiesViewModel @Inject constructor(
             // For simplicity, assuming a non-zero result indicates success
             if (result > 0) {
                 // If the city was successfully deleted, refresh the list of favorite cities
-                refreshFavoriteCities()
+                updateFavoriteCitiesWeather()
             } else {
                 // Log an error or handle the failure to delete the city as needed
                 // This could involve showing an error message to the user
@@ -133,18 +132,6 @@ class CitiesViewModel @Inject constructor(
         }
     }
 
-     fun refreshFavoriteCities() {
-        viewModelScope.launch {
-            // Assuming getFavoriteCities returns List<WeatherDatabaseHandler.City>
-            val favoriteCities = databaseHandler.getFavoriteCities()
-            val favoriteCitiesList = favoriteCities.map { city ->
-                // Convert each city to FavoriteCityWeather, perhaps by fetching weather data
-                // Placeholder for conversion logic
-                FavoriteCityWeather(cityName = city.name, temperature = 0.0, weatherStatus = "", lat = city.lat, lon = city.long)
-            }
-            _favoriteCities.value = favoriteCitiesList
-        }
-    }
 }
 
 
