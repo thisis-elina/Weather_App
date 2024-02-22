@@ -47,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -277,28 +278,30 @@ fun SearchBar(
     onSearch: (String) -> Unit,
     viewModelScope: CoroutineScope,
     citiesViewModel: CitiesViewModel,
-    searchResults: List<CityDTO> // Add searchResults parameter
+    searchResults: List<CityDTO>
 ) {
     var searchText by remember { mutableStateOf("") }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var selectedCity by remember { mutableStateOf<CityDTO?>(null) }
 
     // Function to perform the API call to search for cities
     val searchCities: (String) -> Unit = { query ->
-        onSearch(query) // Notify the caller of the search text change
-        // Perform API call to search for cities using the provided query
-        // You can use the viewModelScope to launch a coroutine and make the API call
+        onSearch(query)
         viewModelScope.launch {
-            // Call the function in the CitiesViewModel to set the search query
-            // This will trigger the flow in the view model to fetch search results
             citiesViewModel.setSearchQuery(query)
         }
     }
 
+    // Function to handle text field value change
+    val onTextFieldValueChange: (String) -> Unit = { newText ->
+        searchText = newText
+        searchCities(newText)
+        isDropdownExpanded = newText.isNotEmpty() // Show dropdown only if text field is not empty
+    }
+
     TextField(
         value = searchText,
-        onValueChange = { newText ->
-            searchText = newText
-            searchCities(newText) // Trigger the API call when the user input changes
-        },
+        onValueChange = onTextFieldValueChange,
         label = { Text("Search Cities", color = Color.White) },
         textStyle = TextStyle(color = Color.White),
         trailingIcon = {
@@ -310,20 +313,30 @@ fun SearchBar(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
+            .onFocusChanged {
+                isDropdownExpanded = it.isFocused && searchResults.isNotEmpty() // Show dropdown only if focused and search results are available
+            }
     )
 
     // Show dropdown menu with search results
-    DropdownMenu(
-        expanded = searchResults.isNotEmpty(), // Only show if search results are not empty
-        onDismissRequest = { /* Handle dismiss */ }
-    ) {
-        searchResults.forEach { city ->
-            DropdownMenuItem(onClick = { /* Handle city selection */ }) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("${city.name}, ${city.country}") // Display city name and country
+    if (isDropdownExpanded) {
+        DropdownMenu(
+            expanded = true, // Always show the dropdown when isDropdownExpanded is true
+            onDismissRequest = { isDropdownExpanded = false }
+        ) {
+            searchResults.forEach { city ->
+                DropdownMenuItem(onClick = {
+                    selectedCity = city
+                    isDropdownExpanded = false // Collapse dropdown when a city is selected
+                    searchText = "${city.name}, ${city.country}" // Update search text with selected city
+                }) {
+                    Text("${city.name}, ${city.country}")
                 }
             }
         }
     }
 }
+
+
+
 
