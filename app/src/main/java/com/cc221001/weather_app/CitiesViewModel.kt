@@ -125,7 +125,7 @@ class CitiesViewModel @Inject constructor(
             // For simplicity, assuming a non-zero result indicates success
             if (result > 0) {
                 // If the city was successfully deleted, refresh the list of favorite cities
-                updateFavoriteCitiesWeather()
+                refreshFavoriteCities()
             } else {
                 // Log an error or handle the failure to delete the city as needed
                 // This could involve showing an error message to the user
@@ -133,7 +133,7 @@ class CitiesViewModel @Inject constructor(
         }
     }
 
-    private fun refreshFavoriteCities() {
+     fun refreshFavoriteCities() {
         viewModelScope.launch {
             // Assuming getFavoriteCities returns List<WeatherDatabaseHandler.City>
             val favoriteCities = databaseHandler.getFavoriteCities()
