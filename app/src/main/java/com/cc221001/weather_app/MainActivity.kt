@@ -40,7 +40,6 @@ class MainActivity : ComponentActivity() {
             permissionHandler.requestPermissions(requiredPermissions)
         setContent {
             Weather_AppTheme {
-
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

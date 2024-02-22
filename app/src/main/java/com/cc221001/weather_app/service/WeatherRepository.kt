@@ -6,6 +6,7 @@ import android.location.Location
 import android.os.Looper
 import androidx.annotation.RequiresPermission
 import com.cc221001.weather_app.BuildConfig
+import com.cc221001.weather_app.db.WeatherDatabaseHandler
 import com.cc221001.weather_app.service.dto.CityDTO
 import com.cc221001.weather_app.service.dto.CurrentWeather
 import com.cc221001.weather_app.service.dto.ForecastWeather
@@ -59,7 +60,19 @@ class WeatherRepository @Inject constructor(
         }
     }
 
-
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    fun getFavouritesCurrentWeather(city: WeatherDatabaseHandler.City): Flow<CurrentWeather?> {
+        return flow {
+            try {
+                // Fetch current weather data using city's latitude and longitude
+                val response = service.getCurrentWeather(city.lat, city.long, BuildConfig.API_KEY).body()
+                emit(response) // Emit the fetched current weather
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emit(null) // Emit null in case of failure
+            }
+        }
+    }
 
     @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     fun weatherForecast(): Flow<List<SimpleForecast>> {
@@ -157,7 +170,6 @@ class WeatherRepository @Inject constructor(
             emit(emptyList())
         }
     }
-
 }
 class SimpleForecast(
     val dayName: String,

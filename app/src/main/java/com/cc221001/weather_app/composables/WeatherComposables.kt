@@ -1,5 +1,4 @@
 package com.cc221001.weather_app.composables
-
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -232,4 +231,17 @@ fun CurrentWeather.background(weather: List<CurrentWeather.Weather>): Int {
 @Composable
 fun formatTemperature(temperature: Double): String {
     return stringResource(R.string.temperature_degrees, temperature.roundToInt())
+}
+
+@Composable
+fun WeatherComposable(weather: CurrentWeather?) {
+
+    Image(
+        painter = painterResource(
+            id = weather?.background(weather!!.weather) ?: R.drawable.clear
+        ),
+        contentDescription = "Login_Image",
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize()
+    )
 }

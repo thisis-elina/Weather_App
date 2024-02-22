@@ -72,6 +72,7 @@ import com.cc221001.weather_app.composables.WeatherComposable
 import com.cc221001.weather_app.composables.formatTemperature
 import com.cc221001.weather_app.composables.smallbackground
 import com.cc221001.weather_app.service.dto.CityDTO
+import com.cc221001.weather_app.service.dto.CurrentWeather
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -91,6 +92,7 @@ fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewMode
     val selectedScreen = remember { mutableStateOf<Screen?>(null) }
     val searchResults by citiesViewModel.searchResults.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
+    val citiesViewState by citiesViewModel.citiesViewState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -122,7 +124,7 @@ fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewMode
             }
             composable(Screen.Cities.route) {
                 selectedScreen.value = Screen.Cities
-                DisplayCities(citiesViewModel)
+                DisplayCities(citiesViewState = citiesViewState)
             }
         }
         if (showDialog) {
@@ -436,4 +438,3 @@ fun WeatherInfoDialog(
                 }
             }
         }}}
-

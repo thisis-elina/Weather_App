@@ -41,7 +41,7 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
         return db.insert(cityTable, null, values)
     }
 
-    fun getAllCities(): List<City> {
+    fun getFavoriteCities(): List<City> {
         val cities = mutableListOf<City>()
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $cityTable", null)
@@ -51,9 +51,9 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
             val longitudeIndex = cursor.getColumnIndex(cityLongitude)
             while (cursor.moveToNext()) {
                 val name = cursor.getString(nameIndex)
-                val latitude = cursor.getDouble(latitudeIndex)
-                val longitude = cursor.getDouble(longitudeIndex)
-                cities.add(City(name, latitude, longitude))
+                val lat = cursor.getDouble(latitudeIndex)
+                val long = cursor.getDouble(longitudeIndex)
+                cities.add(City(name, lat, long))
             }
         }
         return cities
@@ -64,5 +64,6 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
         return db.delete(cityTable, "$cityName = ?", arrayOf(name))
     }
 
-    data class City(val name: String, val latitude: Double, val longitude: Double)
+    data class City(val name: String, val lat: Double, val long: Double) {
+    }
 }

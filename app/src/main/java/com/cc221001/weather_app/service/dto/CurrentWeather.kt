@@ -31,6 +31,7 @@ data class CurrentWeather(
     @SerializedName("cod")
     val cod: Int
 ) {
+
     data class Coord(
         @SerializedName("lon")
         val lon: Double,

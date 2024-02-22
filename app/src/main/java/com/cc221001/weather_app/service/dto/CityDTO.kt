@@ -13,7 +13,7 @@ data class CityDTO(
     val long: Double,
 
     @SerializedName("country")
-    val country: String,
+    val country: String?,
 
     @SerializedName("state")
     val state: String?,

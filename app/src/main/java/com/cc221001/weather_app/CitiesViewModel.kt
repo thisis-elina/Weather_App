@@ -8,7 +8,9 @@ import com.cc221001.weather_app.service.WeatherRepository
 import com.cc221001.weather_app.service.dto.CityDTO
 import com.cc221001.weather_app.service.dto.CurrentWeather
 import com.cc221001.weather_app.stateModel.CitiesViewState
+import com.cc221001.weather_app.stateModel.FavoriteCityWeather
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,8 +23,6 @@ class CitiesViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     private val _citiesViewState = MutableStateFlow(CitiesViewState())
     val citiesViewState: StateFlow<CitiesViewState> = _citiesViewState.asStateFlow()
-
-
     // Search results StateFlow
     val searchResults: StateFlow<List<CityDTO>> = _searchQuery
         .debounce(500) // Debounce to limit API calls
@@ -36,6 +36,9 @@ class CitiesViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    init {
+        updateFavoriteCitiesWeather()
+    }
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -59,4 +62,54 @@ class CitiesViewModel @Inject constructor(
             databaseHandler.insertCity(city.name, city.lat, city.long)
         }
     }
+
+    @SuppressLint("MissingPermission")
+    fun updateFavoriteCitiesWeather() {
+        viewModelScope.launch {
+            // Fetch favorite cities from the database
+            val favoriteCities = databaseHandler.getFavoriteCities()
+
+            // Create a Flow of FavoriteCityWeather by fetching weather for each favorite city
+            val weatherInfoFlows = favoriteCities.map { city ->
+                // Map WeatherDatabaseHandler.City to CityDTO
+                val city = WeatherDatabaseHandler.City(
+                    name = city.name,
+                    lat = city.lat,
+                    long = city.long,
+                )
+                weatherRepository.getFavouritesCurrentWeather(city)
+                    .mapNotNull { weather ->
+                        weather?.let {
+                            FavoriteCityWeather(
+                                cityName = city.name,
+                                temperature = it.main.temp,
+                                lat = city.lat,
+                                lon = city.long,
+                                weatherStatus = it.weather.first().main
+                            )
+                        }
+                    }
+            }
+
+            // Flatten and merge the flows concurrently
+            val mergedFlow = weatherInfoFlows
+                .map { flow -> flow.flowOn(Dispatchers.Default) } // Ensure each flow runs on a separate dispatcher
+                .toList() // Convert the list of flows to a single flow
+                .asFlow() // Convert the list to a flow
+                .flatMapMerge { it } // Flatten and merge the flows
+
+            // Collect the results into a list
+            val weatherInfoList = mergedFlow.toList()
+
+            // Update the view state with the new list
+            _citiesViewState.update { currentState ->
+                currentState.copy(favoriteCitiesWeather = weatherInfoList)
+            }
+        }
+    }
+
+
+
+
 }
+
