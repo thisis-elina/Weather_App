@@ -288,88 +288,76 @@ fun SearchBar(
 ) {
     var searchText by remember { mutableStateOf("") }
     var isDropdownExpanded by remember { mutableStateOf(false) }
-    var selectedCity by remember { mutableStateOf<CityDTO?>(null) }
-    var showDialog by remember { mutableStateOf(false) }
-
-
-    // Function to perform the API call to search for cities
-    val searchCities: (String) -> Unit = { query ->
-        onSearch(query)
-        viewModelScope.launch {
-            citiesViewModel.setSearchQuery(query)
-        }
-    }
-
-    // Function to handle text field value change
-    val onTextFieldValueChange: (String) -> Unit = { newText ->
-        searchText = newText
-        searchCities(newText)
-        isDropdownExpanded = newText.isNotEmpty() // Show dropdown only if text field is not empty
-    }
-
     val focusManager = LocalFocusManager.current
     val softwareKeyboardController = LocalSoftwareKeyboardController.current
 
+    // Function to perform the API call to search for cities
+    val searchCities: (String) -> Unit = { query ->
+        if (query.length >= 3) { // Only search if query length is at least 3 characters
+            onSearch(query)
+            viewModelScope.launch {
+                citiesViewModel.setSearchQuery(query)
+            }
+            isDropdownExpanded = true
+        } else {
+            isDropdownExpanded = false
+        }
+    }
+
     TextField(
         value = searchText,
-        onValueChange = onTextFieldValueChange,
+        onValueChange = { newText ->
+            searchText = newText
+            searchCities(newText)
+        },
         label = { Text("Search Cities (min 3 char.)", color = Color.White) },
         textStyle = TextStyle(color = Color.White),
         trailingIcon = {
             IconButton(onClick = {
-                searchCities(searchText)
-                focusManager.clearFocus() // Clear focus when clicking the search icon
+                if (searchText.isNotEmpty()) {
+                    searchCities(searchText)
+                    focusManager.clearFocus() // Clear focus after search
+                    softwareKeyboardController?.hide() // Hide keyboard explicitly after search
+                }
             }) {
-                Icon(imageVector = Icons.Filled.Search, contentDescription = "Perform Search")
+                Icon(imageVector = Icons.Filled.Search, contentDescription = "Perform Search", tint = Color.White)
             }
         },
         singleLine = true,
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .onFocusChanged { state ->
-                if (!state.isFocused && !isDropdownExpanded) {
-                    softwareKeyboardController?.hide() // Hide keyboard when losing focus and dropdown is not expanded
-                }
-            }
     )
 
-    // Show dropdown menu with search results
-    if (isDropdownExpanded) {
+    // Dropdown menu logic remains the same
+    if (isDropdownExpanded && searchResults.isNotEmpty()) {
         DropdownMenu(
-            expanded = true,
+            expanded = isDropdownExpanded,
             onDismissRequest = { isDropdownExpanded = false },
-            modifier = Modifier.background(Color.Black) // Slightly more transparent than the items
+            modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
+                .background(Color.Black)
         ) {
             searchResults.forEach { city ->
                 DropdownMenuItem(
                     onClick = {
+                        searchText = "${city.name}, ${city.country}"
                         citiesViewModel.fetchWeatherForSelectedCity(city)
                         onCitySelected()
-                        selectedCity = city
                         isDropdownExpanded = false
-                        searchText = "${city.name}, ${city.country}"
-                        showDialog = true
+                        focusManager.clearFocus()
+                        softwareKeyboardController?.hide()
                     },
-                    modifier = Modifier.background(Color.White.copy(alpha = 0.20f))
+                            modifier = Modifier.background(Color(114, 88, 128, 125))
                 ) {
-                    Text(
-                        text = buildString {
-                            append(city.name)
-                            if (!city.state.isNullOrEmpty()) {
-                                append(", ${city.state}")
-                            }
-                            append(", ${city.country}")
-                        },
-                        color = Color.White
-                    )
+                    Text(text = "${city.name}, ${city.state}, ${city.country}", color = Color.White)
                 }
             }
         }
     }
 }
+
 
 
 @Composable
