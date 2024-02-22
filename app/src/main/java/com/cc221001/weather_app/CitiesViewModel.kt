@@ -23,6 +23,10 @@ class CitiesViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     private val _citiesViewState = MutableStateFlow(CitiesViewState())
     val citiesViewState: StateFlow<CitiesViewState> = _citiesViewState.asStateFlow()
+
+    private val _favoriteCities = MutableStateFlow<List<FavoriteCityWeather>>(emptyList())
+    val favoriteCities: StateFlow<List<FavoriteCityWeather>> = _favoriteCities.asStateFlow()
+
     // Search results StateFlow
     val searchResults: StateFlow<List<CityDTO>> = _searchQuery
         .debounce(500) // Debounce to limit API calls
@@ -38,6 +42,7 @@ class CitiesViewModel @Inject constructor(
 
     init {
         updateFavoriteCitiesWeather()
+        refreshFavoriteCities()
     }
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
@@ -57,9 +62,12 @@ class CitiesViewModel @Inject constructor(
 
     fun addCityToFavourites(city: CityDTO) {
         viewModelScope.launch {
-            // Assuming you have a method in WeatherDatabaseHandler to add a city
-            // Replace with the actual method to insert the city into the database
-            databaseHandler.insertCity(city.name, city.lat, city.long)
+            val insertResult = databaseHandler.insertCity(city.name, city.lat, city.long)
+            if (insertResult > -1) { // Assuming successful insert returns a row ID greater than -1
+                refreshFavoriteCities() // Refresh the list of favorite cities
+            } else {
+                // Handle the error case if needed
+            }
         }
     }
 
@@ -108,8 +116,37 @@ class CitiesViewModel @Inject constructor(
         }
     }
 
+    fun deleteCityFromFavorites(cityName: String) {
+        viewModelScope.launch {
+            // Call the deleteCity method from the database handler
+            val result = databaseHandler.deleteCity(cityName)
 
+            // Check if the deletion was successful based on the result
+            // For simplicity, assuming a non-zero result indicates success
+            if (result > 0) {
+                // If the city was successfully deleted, refresh the list of favorite cities
+                updateFavoriteCitiesWeather()
+            } else {
+                // Log an error or handle the failure to delete the city as needed
+                // This could involve showing an error message to the user
+            }
+        }
+    }
 
-
+    private fun refreshFavoriteCities() {
+        viewModelScope.launch {
+            // Assuming getFavoriteCities returns List<WeatherDatabaseHandler.City>
+            val favoriteCities = databaseHandler.getFavoriteCities()
+            val favoriteCitiesList = favoriteCities.map { city ->
+                // Convert each city to FavoriteCityWeather, perhaps by fetching weather data
+                // Placeholder for conversion logic
+                FavoriteCityWeather(cityName = city.name, temperature = 0.0, weatherStatus = "", lat = city.lat, lon = city.long)
+            }
+            _favoriteCities.value = favoriteCitiesList
+        }
+    }
 }
+
+
+
 

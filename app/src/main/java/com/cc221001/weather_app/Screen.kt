@@ -124,7 +124,7 @@ fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewMode
             }
             composable(Screen.Cities.route) {
                 selectedScreen.value = Screen.Cities
-                DisplayCities(citiesViewState = citiesViewState)
+                DisplayCities(citiesViewState = citiesViewState, citiesViewModel)
             }
         }
         if (showDialog) {
@@ -428,6 +428,7 @@ fun WeatherInfoDialog(
                                 lat = weather.coord.lat,
                                 long = weather.coord.lon
                             ))
+                            citiesViewModel.updateFavoriteCitiesWeather()
                             onDismissRequest() // Dismiss the dialog
                             Toast.makeText(context, "${weather.name} has been added to favourites", Toast.LENGTH_LONG).show()
                         },
