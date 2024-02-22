@@ -41,6 +41,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +74,10 @@ import com.cc221001.weather_app.viewModel.CitiesViewModel
 import com.cc221001.weather_app.viewModel.WeatherViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
+
 
 // Define a sealed class named 'Screen' to represent different screens in the app.
 sealed class Screen(val route: String) {
@@ -91,6 +96,18 @@ fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewMode
     val searchResults by citiesViewModel.searchResults.collectAsState()
     var showDialog by remember { mutableStateOf(false) }
     val citiesViewState by citiesViewModel.citiesViewState.collectAsState()
+// Obtain the context
+    val context = LocalContext.current
+
+    // Collect the latest uiEvent
+    val uiEvent = citiesViewModel.uiEvent.observeAsState().value
+
+    // Observe uiEvent for changes and show toast messages accordingly
+    LaunchedEffect(uiEvent) {
+        uiEvent?.getContentIfNotHandled()?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -416,7 +433,6 @@ fun WeatherInfoDialog(
                             ))
                             citiesViewModel.updateFavoriteCitiesWeather()
                             onDismissRequest() // Dismiss the dialog
-                            Toast.makeText(context, "${weather.name} has been added to favourites", Toast.LENGTH_LONG).show()
                         },
                         modifier = Modifier.padding(top = 16.dp)
                     ) {

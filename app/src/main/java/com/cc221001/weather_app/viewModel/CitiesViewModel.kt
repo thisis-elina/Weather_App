@@ -1,6 +1,8 @@
 package com.cc221001.weather_app.viewModel
 
 import android.annotation.SuppressLint
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cc221001.weather_app.db.WeatherDatabaseHandler
@@ -26,6 +28,8 @@ class CitiesViewModel @Inject constructor(
 
     private val _favoriteCities = MutableStateFlow<List<FavoriteCityWeather>>(emptyList())
     val favoriteCities: StateFlow<List<FavoriteCityWeather>> = _favoriteCities.asStateFlow()
+    private val _uiEvent = MutableLiveData<Event<String>>()
+    val uiEvent: LiveData<Event<String>> = _uiEvent
 
     // Search results StateFlow
     val searchResults: StateFlow<List<CityDTO>> = _searchQuery
@@ -62,10 +66,17 @@ class CitiesViewModel @Inject constructor(
     fun addCityToFavourites(city: CityDTO) {
         viewModelScope.launch {
             val insertResult = databaseHandler.insertCity(city.name, city.lat, city.long)
-            if (insertResult > -1) { // Assuming successful insert returns a row ID greater than -1
-                updateFavoriteCitiesWeather()
-            } else {
-                // Handle the error case if needed
+            when (insertResult) {
+                WeatherDatabaseHandler.INSERT_SUCCESS -> {
+                    updateFavoriteCitiesWeather()
+                    _uiEvent.postValue(Event("${city.name} added to Favourites"))
+                }
+                WeatherDatabaseHandler.INSERT_DUPLICATE -> {
+                    _uiEvent.postValue(Event("${city.name} wasn't inserted because it's a duplicate"))
+                }
+                WeatherDatabaseHandler.INSERT_ERROR -> {
+                    _uiEvent.postValue(Event("Error adding ${city.name} to Favourites"))
+                }
             }
         }
     }
@@ -136,4 +147,18 @@ class CitiesViewModel @Inject constructor(
 
 
 
+open class Event<out T>(private val content: T) {
+    var hasBeenHandled = false
+        private set
 
+    fun getContentIfNotHandled(): T? {
+        return if (hasBeenHandled) {
+            null
+        } else {
+            hasBeenHandled = true
+            content
+        }
+    }
+
+    fun peekContent(): T = content
+}

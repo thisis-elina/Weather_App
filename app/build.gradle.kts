@@ -83,7 +83,6 @@ dependencies {
     implementation ("com.google.android.gms:play-services-location:21.1.0")
 
     implementation ("androidx.lifecycle:lifecycle-service:2.7.0")
-
     implementation("com.google.dagger:hilt-android:2.44")
     implementation(platform("androidx.compose:compose-bom:2023.03.00"))
     implementation("com.google.android.gms:play-services-contextmanager:9.4.0")

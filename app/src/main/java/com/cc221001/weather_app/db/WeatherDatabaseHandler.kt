@@ -14,6 +14,9 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
         private const val cityName = "name"
         private const val cityLatitude = "latitude"
         private const val cityLongitude = "longitude"
+        const val INSERT_SUCCESS = 1
+        const val INSERT_DUPLICATE = -1
+        const val INSERT_ERROR = -2
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -31,14 +34,26 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
         onCreate(db)
     }
 
-    fun insertCity(name: String, latitude: Double, longitude: Double): Long {
-        val db = this.writableDatabase
-        val values = ContentValues().apply {
-            put(cityName, name) // Corrected to use column name as the key
-            put(cityLatitude, latitude)
-            put(cityLongitude, longitude)
+    fun insertCity(name: String, latitude: Double, longitude: Double): Int {
+        val db = this.readableDatabase
+        val selection = "$cityName = ? AND $cityLatitude = ? AND $cityLongitude = ?"
+        val selectionArgs = arrayOf(name, latitude.toString(), longitude.toString())
+        val cursor = db.query(cityTable, arrayOf(cityId), selection, selectionArgs, null, null, null)
+
+        val cityExists = cursor.moveToFirst()
+        cursor.close()
+
+        return if (cityExists) {
+            INSERT_DUPLICATE // City is a duplicate
+        } else {
+            val values = ContentValues().apply {
+                put(cityName, name)
+                put(cityLatitude, latitude)
+                put(cityLongitude, longitude)
+            }
+            val result = this.writableDatabase.insert(cityTable, null, values)
+            if (result == -1L) INSERT_ERROR else INSERT_SUCCESS // Check if insert was successful
         }
-        return db.insert(cityTable, null, values)
     }
 
     fun getFavoriteCities(): List<City> {
