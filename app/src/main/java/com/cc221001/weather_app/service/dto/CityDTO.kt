@@ -7,10 +7,10 @@ data class CityDTO(
     val name: String,
 
     @SerializedName("lat")
-    val latitude: Double,
+    val lat: Double,
 
     @SerializedName("lon")
-    val longitude: Double,
+    val long: Double,
 
     @SerializedName("country")
     val country: String,

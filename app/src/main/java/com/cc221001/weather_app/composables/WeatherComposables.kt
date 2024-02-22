@@ -230,6 +230,6 @@ fun CurrentWeather.background(weather: List<CurrentWeather.Weather>): Int {
 }
 
 @Composable
-private fun formatTemperature(temperature: Double): String {
+fun formatTemperature(temperature: Double): String {
     return stringResource(R.string.temperature_degrees, temperature.roundToInt())
 }

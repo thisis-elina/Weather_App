@@ -37,6 +37,7 @@ interface OpenWeatherService {
     @GET("geo/1.0/direct?")
     suspend fun getCityCoord(
         @Query("q") q: String,
+        @Query("limit") limit: Int,
         @Query("appid") appid: String,
     ) : Response<List<CityDTO>>
 }

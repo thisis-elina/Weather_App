@@ -46,6 +46,22 @@ class WeatherRepository @Inject constructor(
     }
 
     @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+    fun getSpecialCurrentWeather(city: CityDTO): Flow<CurrentWeather?> {
+        return flow {
+            try {
+                // Fetch current weather data using city's latitude and longitude
+                val response = service.getCurrentWeather(city.lat, city.long, BuildConfig.API_KEY).body()
+                emit(response) // Emit the fetched current weather
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emit(null) // Emit null in case of failure
+            }
+        }
+    }
+
+
+
+    @RequiresPermission(Manifest.permission.ACCESS_FINE_LOCATION)
     fun weatherForecast(): Flow<List<SimpleForecast>> {
         return locationFlow().mapNotNull { location ->
             try {
@@ -127,7 +143,7 @@ class WeatherRepository @Inject constructor(
     fun searchCities(query: String): Flow<List<CityDTO>> = flow {
         if (query.length >= 3) {
             try {
-                val response = service.getCityCoord(query, BuildConfig.API_KEY)
+                val response = service.getCityCoord(query, 5, BuildConfig.API_KEY)
                 if (response.isSuccessful) {
                     emit(response.body() ?: emptyList())
                 } else {
