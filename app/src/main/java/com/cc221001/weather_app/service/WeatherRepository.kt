@@ -6,6 +6,7 @@ import android.location.Location
 import android.os.Looper
 import androidx.annotation.RequiresPermission
 import com.cc221001.weather_app.BuildConfig
+import com.cc221001.weather_app.service.dto.CityDTO
 import com.cc221001.weather_app.service.dto.CurrentWeather
 import com.cc221001.weather_app.service.dto.ForecastWeather
 import com.google.android.gms.location.LocationCallback
@@ -15,6 +16,7 @@ import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -119,6 +121,24 @@ class WeatherRepository @Inject constructor(
             //println("Closed")
             // Remove location updates when the channel is closed
             client.removeLocationUpdates(callback)
+        }
+    }
+
+    fun searchCities(query: String): Flow<List<CityDTO>> = flow {
+        if (query.length >= 3) {
+            try {
+                val response = service.getCityCoord(query, BuildConfig.API_KEY)
+                if (response.isSuccessful) {
+                    emit(response.body() ?: emptyList())
+                } else {
+                    emit(emptyList())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emit(emptyList())
+            }
+        } else {
+            emit(emptyList())
         }
     }
 

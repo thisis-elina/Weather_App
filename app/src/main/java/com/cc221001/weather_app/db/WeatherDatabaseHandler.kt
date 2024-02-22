@@ -1,3 +1,5 @@
+package com.cc221001.weather_app.db
+
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -29,10 +31,10 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
         onCreate(db)
     }
 
-    fun insertCity(cityName: String, latitude: Double, longitude: Double): Long {
+    fun insertCity(name: String, latitude: Double, longitude: Double): Long {
         val db = this.writableDatabase
         val values = ContentValues().apply {
-            put(cityName, cityName)
+            put(cityName, name) // Corrected to use column name as the key
             put(cityLatitude, latitude)
             put(cityLongitude, longitude)
         }
@@ -48,22 +50,18 @@ class WeatherDatabaseHandler(context: Context) : SQLiteOpenHelper(context, dbNam
             val latitudeIndex = cursor.getColumnIndex(cityLatitude)
             val longitudeIndex = cursor.getColumnIndex(cityLongitude)
             while (cursor.moveToNext()) {
-                if (nameIndex != -1 && latitudeIndex != -1 && longitudeIndex != -1) {
-                    val name = cursor.getString(nameIndex)
-                    val latitude = cursor.getDouble(latitudeIndex)
-                    val longitude = cursor.getDouble(longitudeIndex)
-                    cities.add(City(name, latitude, longitude))
-                } else {
-                    // Handle the case where column indices are not found
-                }
+                val name = cursor.getString(nameIndex)
+                val latitude = cursor.getDouble(latitudeIndex)
+                val longitude = cursor.getDouble(longitudeIndex)
+                cities.add(City(name, latitude, longitude))
             }
         }
         return cities
     }
 
-    fun deleteCity(cityName: String): Int {
+    fun deleteCity(name: String): Int {
         val db = this.writableDatabase
-        return db.delete(cityTable, "$cityName = ?", arrayOf(cityName))
+        return db.delete(cityTable, "$cityName = ?", arrayOf(name))
     }
 
     data class City(val name: String, val latitude: Double, val longitude: Double)

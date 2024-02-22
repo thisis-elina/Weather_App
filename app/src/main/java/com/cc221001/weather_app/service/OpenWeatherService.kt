@@ -1,6 +1,7 @@
 package com.cc221001.weather_app.service
 
 
+import com.cc221001.weather_app.service.dto.CityDTO
 import com.cc221001.weather_app.service.dto.CurrentWeather
 import com.cc221001.weather_app.service.dto.ForecastWeather
 import retrofit2.Response
@@ -37,5 +38,5 @@ interface OpenWeatherService {
     suspend fun getCityCoord(
         @Query("q") q: String,
         @Query("appid") appid: String,
-    ) : Response<ForecastWeather>
+    ) : Response<List<CityDTO>>
 }

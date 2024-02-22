@@ -1,9 +1,6 @@
 package com.cc221001.weather_app
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.border
@@ -19,19 +16,21 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.ContentAlpha
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentAlpha
 import androidx.compose.material.ProvideTextStyle
+import androidx.compose.material.TextField
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
@@ -40,7 +39,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,16 +48,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cc221001.weather_app.composables.DisplayCities
 import com.cc221001.weather_app.composables.DisplayWeather
 import com.cc221001.weather_app.composables.WeatherComposable
-import com.google.android.gms.awareness.state.Weather
+import com.cc221001.weather_app.service.dto.CityDTO
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 // Define a sealed class named 'Screen' to represent different screens in the app.
 sealed class Screen(val route: String) {
@@ -70,14 +69,15 @@ sealed class Screen(val route: String) {
 @SuppressLint("StateFlowValueCalledInComposition")
 @RequiresApi(Build.VERSION_CODES.Q)
 @Composable
-fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewModel) {
+fun MainView(weatherViewModel: WeatherViewModel, citiesViewModel: CitiesViewModel, viewModelScope: CoroutineScope) {
     val state = citiesViewModel.citiesViewState.collectAsState()
     val weather by weatherViewModel.weather.collectAsState(null)
     val navController = rememberNavController()
     val selectedScreen = remember { mutableStateOf<Screen?>(null) }
+    val searchResults by citiesViewModel.searchResults.collectAsState()
 
     Scaffold(
-        topBar = { MyTopAppBar(navController, selectedScreen.value ?: state.value.selectedScreen) },
+        topBar = { MyTopAppBar(navController, selectedScreen.value ?: state.value.selectedScreen, citiesViewModel, viewModelScope, searchResults)},
         bottomBar = { BottomNavigationBar(navController, selectedScreen.value ?: state.value.selectedScreen) },
         containerColor = Color.White,
     ) {
@@ -184,11 +184,20 @@ fun BottomNavigationBar(navController: NavHostController, selectedScreen: Screen
 }
 
 @Composable
-fun MyTopAppBar(navController: NavHostController, selectedScreen: Screen) {
+fun MyTopAppBar(
+    navController: NavHostController,
+    selectedScreen: Screen,
+    citiesViewModel: CitiesViewModel,
+    viewModelScope: CoroutineScope,
+    searchResults: List<CityDTO>
+) {
+    // State to manage the visibility of the search bar
+    var showSearchBar by remember { mutableStateOf(false) }
+
     TopAppBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(124.dp),
+            .height(if (showSearchBar) 180.dp else 124.dp), // Adjust the height based on the search bar visibility
         backgroundColor = Color.Transparent,
         elevation = 0.dp,
     ) {
@@ -213,7 +222,8 @@ fun MyTopAppBar(navController: NavHostController, selectedScreen: Screen) {
                     }
                 }
             }
-            Row() {
+            // Display the screen title or other information based on the selected screen
+            Row(modifier = Modifier.fillMaxWidth()) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -235,41 +245,85 @@ fun MyTopAppBar(navController: NavHostController, selectedScreen: Screen) {
                         }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterVertically),
-                    contentAlignment = Alignment.Center
-                ) {
-                    ProvideTextStyle(value = MaterialTheme.typography.bodyMedium) {
-                        CompositionLocalProvider(
-                            LocalContentAlpha provides ContentAlpha.high,
-                        ) {
-                            Text(
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                text = ""
-                            )
-                        }
+                // Search Icon/Button - toggles the visibility of the search bar
+                if (!showSearchBar) {
+                    IconButton(
+                        onClick = { showSearchBar = true },
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    ) {
+                        Icon(imageVector = Icons.Filled.Search, contentDescription = "Search", tint = Color.White)
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .align(Alignment.CenterVertically)
-                        .padding(0.dp, 8.dp, 0.dp, 0.dp),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    IconButton(
-                        onClick = { navController.navigate(Screen.Weather.route) },
-                        enabled = true,
-                    ) {
-                        androidx.compose.material.Icon(imageVector = Icons.Default.AccountBox, contentDescription = "", modifier = Modifier
-                            .size(40.dp)
-                            .padding(bottom = 6.dp)
-                            .clip(RoundedCornerShape(10.dp)), tint = Color.White)
-                    }
+            }
+            // Conditionally display the SearchBar when the search icon is clicked
+            if (showSearchBar) {
+                SearchBar(
+                    onSearch = { query ->
+                        citiesViewModel.setSearchQuery(query)
+                        // Optional: Navigate to a screen that displays search results
+                        // navController.navigate("searchResultsScreen")
+                    },
+                    viewModelScope = viewModelScope,
+                    citiesViewModel = citiesViewModel,
+                    searchResults = searchResults // Pass searchResults here
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchBar(
+    onSearch: (String) -> Unit,
+    viewModelScope: CoroutineScope,
+    citiesViewModel: CitiesViewModel,
+    searchResults: List<CityDTO> // Add searchResults parameter
+) {
+    var searchText by remember { mutableStateOf("") }
+
+    // Function to perform the API call to search for cities
+    val searchCities: (String) -> Unit = { query ->
+        onSearch(query) // Notify the caller of the search text change
+        // Perform API call to search for cities using the provided query
+        // You can use the viewModelScope to launch a coroutine and make the API call
+        viewModelScope.launch {
+            // Call the function in the CitiesViewModel to set the search query
+            // This will trigger the flow in the view model to fetch search results
+            citiesViewModel.setSearchQuery(query)
+        }
+    }
+
+    TextField(
+        value = searchText,
+        onValueChange = { newText ->
+            searchText = newText
+            searchCities(newText) // Trigger the API call when the user input changes
+        },
+        label = { Text("Search Cities", color = Color.White) },
+        textStyle = TextStyle(color = Color.White),
+        trailingIcon = {
+            IconButton(onClick = { searchCities(searchText) }) {
+                Icon(imageVector = Icons.Filled.Search, contentDescription = "Perform Search")
+            }
+        },
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    )
+
+    // Show dropdown menu with search results
+    DropdownMenu(
+        expanded = searchResults.isNotEmpty(), // Only show if search results are not empty
+        onDismissRequest = { /* Handle dismiss */ }
+    ) {
+        searchResults.forEach { city ->
+            DropdownMenuItem(onClick = { /* Handle city selection */ }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("${city.name}, ${city.country}") // Display city name and country
                 }
             }
         }
     }
 }
+
