@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -370,54 +371,69 @@ fun SearchBar(
 
 
 @Composable
-fun WeatherInfoDialog(citiesViewModel: CitiesViewModel, onDismissRequest: () -> Unit, context: Context) {
+fun WeatherInfoDialog(
+    citiesViewModel: CitiesViewModel,
+    onDismissRequest: () -> Unit,
+    context: Context
+) {
     val currentWeather by citiesViewModel.currentWeather.collectAsState()
 
     if (currentWeather != null) {
         Dialog(onDismissRequest = { onDismissRequest() }) {
-            currentWeather?.let { weather ->
-                Column() {Box ( modifier = Modifier
+            // Assuming currentWeather is not null based on the check
+            val weather = currentWeather!!
+            Box(
+                modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(10.dp))
-                ){
-                    Image(
-                        painter = painterResource(id = weather.smallbackground()),
-                        contentDescription = "Background",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp)),
-                        contentScale = ContentScale.FillWidth
-                    )
-                    Column(
-                        Modifier
-                            .align(Alignment.TopCenter),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(text = formatTemperature(weather.main.temp), fontSize = 46.sp, color = Color.White)
-                        Text(
-                            text = weather?.weather?.first()?.main.toString(),
-                            fontSize = 26.sp,
-                            color = Color.White
+                    .background(Color(0, 0, 0, 220)) // Semi-transparent background for the dialog
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box ( modifier = Modifier
+                        //.fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                    ){
+                        Image(
+                            painter = painterResource(id = weather.smallbackground()),
+                            contentDescription = "Background",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp)),
+                            contentScale = ContentScale.FillWidth
                         )
-                        Text(text = weather?.name.toString(), fontSize = 16.sp, color = Color.White)
-                    }
-                }
-                        Button(
-                            onClick = {
-                                citiesViewModel.addCityToFavourites(CityDTO(
-                                    name = weather.name ?: "",
-                                    state = "", // You might need to adjust this based on your data model
-                                    country = "", // Same as above
-                                    lat = weather.coord.lat,
-                                    long = weather.coord.lon
-                                ))
-                                onDismissRequest() // Dismiss the dialog
-                                Toast.makeText(context, "${weather.name} has been added to favourites", Toast.LENGTH_LONG).show()
-                            }
+                        Column(
+                            Modifier
+                                .align(Alignment.TopCenter),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Add to Favourites")
-                        }
+                            Text(text = formatTemperature(weather.main.temp), fontSize = 46.sp, color = Color.White)
+                            Text(
+                                text = weather?.weather?.first()?.main.toString(),
+                                fontSize = 26.sp,
+                                color = Color.White
+                            )
+                            Text(text = weather?.name.toString(), fontSize = 16.sp, color = Color.White)
+                        }}
+                    Button(
+                        onClick = {
+                            citiesViewModel.addCityToFavourites(CityDTO(
+                                name = weather.name,
+                                state = "", // Adjust based on your data model
+                                country = "", // Adjust based on your data model
+                                lat = weather.coord.lat,
+                                long = weather.coord.lon
+                            ))
+                            onDismissRequest() // Dismiss the dialog
+                            Toast.makeText(context, "${weather.name} has been added to favourites", Toast.LENGTH_LONG).show()
+                        },
+                        modifier = Modifier.padding(top = 16.dp)
+                    ) {
+                        Text("Add to Favourites")
                     }
                 }
             }
-        }}
+        }}}
+
