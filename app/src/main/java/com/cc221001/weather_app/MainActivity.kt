@@ -14,6 +14,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.cc221001.weather_app.handlers.PermissionHandler
 import com.cc221001.weather_app.ui.theme.Weather_AppTheme
+import com.cc221001.weather_app.viewModel.CitiesViewModel
+import com.cc221001.weather_app.viewModel.WeatherViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

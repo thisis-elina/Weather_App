@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cc221001.weather_app.R
-import com.cc221001.weather_app.WeatherViewModel
+import com.cc221001.weather_app.viewModel.WeatherViewModel
 import com.cc221001.weather_app.service.SimpleForecast
 import com.cc221001.weather_app.service.dto.CurrentWeather
 import kotlin.math.roundToInt
